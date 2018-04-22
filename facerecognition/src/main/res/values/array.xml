@@ -3,6 +3,8 @@
     <string-array name="sections">
         <item >Students List</item>
         <item >Visualize Class</item>
+        <item> Good Students </item>
+        <item> Bad Students </item>
 
     </string-array>
 </resources>

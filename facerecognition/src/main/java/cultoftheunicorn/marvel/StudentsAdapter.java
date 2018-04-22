@@ -23,7 +23,7 @@ import database.model.Student;     //  importing note class
 
 //  Class to set up notes adapter
 
-public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.MyViewHolder> {
+public class StudentsAdapter extends RecyclerView.Adapter<StudentsAdapter.MyViewHolder> {
 
     private Context context;
     private List<Student> studentsList;
@@ -46,9 +46,9 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.MyViewHolder
         }
     }
 
-    // Initiating NotesAdapter
+    // Initiating StudentsAdapter
 
-    public NotesAdapter(Context context, List<Student> notesList) {
+    public StudentsAdapter(Context context, List<Student> notesList) {
         this.context = context;
         this.studentsList = notesList;
     }

@@ -54,13 +54,18 @@
             android:name="cultoftheunicorn.marvel.Training"
             android:label="Training"
             android:screenOrientation="landscape" />
-        <activity android:name="cultoftheunicorn.marvel.ReviewResults"
-            android:label="Review and Mark"/>
+
         <activity
             android:name="cultoftheunicorn.marvel.ViewStudents"
             android:windowSoftInputMode="adjustNothing" />
 
-        <!--android:screenOrientation="portrait"-->
+        <activity
+            android:name="cultoftheunicorn.marvel.GoodStudents"
+            android:windowSoftInputMode="adjustNothing" />
+
+        <activity
+            android:name="cultoftheunicorn.marvel.BadStudents"
+            android:windowSoftInputMode="adjustNothing" />
     </application>
 
 </manifest>

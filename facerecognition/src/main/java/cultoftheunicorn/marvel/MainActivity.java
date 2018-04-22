@@ -55,7 +55,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
                 });
             }
         };
-        timer.schedule(doAsynchronousTask, 0, 120000);       //  timer scheduled for 2 minutes.
+        timer.schedule(doAsynchronousTask, 0, 60000);       //  timer scheduled for 2 minutes.
 
     }
 
@@ -74,7 +74,14 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
             Intent GoToRecognize = new Intent(getApplicationContext(),Recognize.class);
             startActivity(GoToRecognize);
         }
-
+        if(position == 2){
+            Intent GoToGoodStudents = new Intent(getApplicationContext(), GoodStudents.class);
+            startActivity(GoToGoodStudents);
+        }
+        if(position == 3){
+            Intent GoToBadStudents = new Intent(getApplicationContext(), BadStudents.class);
+            startActivity(GoToBadStudents);
+        }
     }
 
 }

@@ -17,7 +17,6 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -39,11 +38,11 @@ import utils.RecycleTouchListener;
 
 public class ViewStudents extends AppCompatActivity {
 
-    private NotesAdapter mAdapter;      // Adapter for Students List
-    private List<Student> notesList = new ArrayList<>();
+    private StudentsAdapter mAdapter;      // Adapter for Students List
+    private List<Student> studentsList = new ArrayList<>();
     private CoordinatorLayout coordinatorLayout;
     private RecyclerView recyclerView;
-    private TextView noNotesView;
+    private TextView noStudentsView;
 
     private StudentDatabaseHelper db;      //  database of Students
 
@@ -57,22 +56,22 @@ public class ViewStudents extends AppCompatActivity {
 
         coordinatorLayout =(android.support.design.widget.CoordinatorLayout) findViewById(R.id.coordinator_layout);
         recyclerView =(android.support.v7.widget.RecyclerView) findViewById(R.id.recycler_view);
-        noNotesView = (android.widget.TextView)findViewById(R.id.empty_notes_view);      //  display if students list is epmty
+        noStudentsView = (android.widget.TextView)findViewById(R.id.empty_notes_view);      //  display if students list is epmty
 
         db = new StudentDatabaseHelper(this);  //  database of Students
 
-        notesList.addAll(db.getAllNotes());     //  list of all students
+        studentsList.addAll(db.getAllStudents());     //  list of all students
 
         //  button to add a new student
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showNoteDialog(false, null, -1);
+                showStudentDialog(false, null, -1);
             }
         });
 
-        mAdapter = new NotesAdapter(this, notesList);       //  Adapter for students list
+        mAdapter = new StudentsAdapter(this, studentsList);       //  Adapter for students list
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -98,24 +97,32 @@ public class ViewStudents extends AppCompatActivity {
 
     //  fucntion to enter a student
     private void createStudent(String name, Long rollnumber) {
+        Student student;
         // inserting student in db and getting
         // newly inserted note id
-        long id = db.insertNote(name,rollnumber);
+        long id = db.insertStudent(name,rollnumber);
 
+        if(id==-1){
+            Toast.makeText(getApplicationContext(), "Roll Number already exists!",
+                    Toast.LENGTH_LONG).show();
+            return ;
+        }
         // get the newly inserted student from db
-        Student n = db.getStudent(id);
+        student = db.getStudent(id);
 
-        if (n != null) {
+        if (student != null) {
             // adding new student to array list at 0 position
-            notesList.add(0, n);
+            studentsList.add(0, student);
 
             // refreshing the list
             mAdapter.notifyDataSetChanged();
 
             toggleEmptyNotes();
+            Toast.makeText(getApplicationContext(), "Student added successfuly!",
+                    Toast.LENGTH_LONG).show();
         }
         else{
-            Toast.makeText(getApplicationContext(), "This is my Toast message!",
+            Toast.makeText(getApplicationContext(), "Error while adding student",
                     Toast.LENGTH_LONG).show();
         }
     }
@@ -124,20 +131,27 @@ public class ViewStudents extends AppCompatActivity {
      * Updating student in db and updating
      * item in the list by its position
      */
-    private void updateStudent(String name,Long rollnumber, int position) {
-        Student n = notesList.get(position);
+    private void editStudent(String name, Long rollnumber, int position) {
+        Student student = studentsList.get(position);
         // updating student name and rollnumber
-        n.setName(name);
-        n.setRollnumber(rollnumber);
+        student.setName(name);
+        student.setRollnumber(rollnumber);
 
         // updating student in db
-        db.updateName(n);
+        if(db.editStudent(student)>0) {
 
-        // refreshing the list
-        notesList.set(position, n);
-        mAdapter.notifyItemChanged(position);
+            // refreshing the list
+            studentsList.set(position, student);
+            mAdapter.notifyItemChanged(position);
 
-        toggleEmptyNotes();
+            toggleEmptyNotes();
+            Toast.makeText(getApplicationContext(), "Edited student successfully!",
+                    Toast.LENGTH_LONG).show();
+        }
+        else{
+            Toast.makeText(getApplicationContext(), "Error while editing student",
+                    Toast.LENGTH_LONG).show();
+        }
     }
 
     /**
@@ -146,10 +160,10 @@ public class ViewStudents extends AppCompatActivity {
      */
     private void deleteStudent(int position) {
         // deleting the student from db
-        db.deleteName(notesList.get(position));
+        db.deleteName(studentsList.get(position));
 
         // removing the note from the list
-        notesList.remove(position);
+        studentsList.remove(position);
         mAdapter.notifyItemRemoved(position);
 
         toggleEmptyNotes();
@@ -169,9 +183,11 @@ public class ViewStudents extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (which == 0) {
-                    showNoteDialog(true, notesList.get(position), position);
+                    showStudentDialog(true, studentsList.get(position), position);
                 } else {
                     deleteStudent(position);
+                    Toast.makeText(getApplicationContext(), "Deleted successfully!",
+                            Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -185,7 +201,7 @@ public class ViewStudents extends AppCompatActivity {
      * button nameOfStudent to UPDATE
      */
 
-    private void showNoteDialog(final boolean shouldUpdate, final Student student, final int position) {
+    private void showStudentDialog(final boolean shouldUpdate, final Student student, final int position) {
         LayoutInflater layoutInflaterAndroid = LayoutInflater.from(getApplicationContext());
 
         //  view for edit student
@@ -244,17 +260,18 @@ public class ViewStudents extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Show toast message when no nameOfStudent is entered
-                if (TextUtils.isEmpty(inputName.getText().toString())) {
+                if (TextUtils.isEmpty(inputName.getText().toString()) || TextUtils.isEmpty(inputRollnumber.getText().toString())) {
                     Toast.makeText(ViewStudents.this, "Enter student!", Toast.LENGTH_SHORT).show();
                     return;
                 } else {
                     alertDialog.dismiss();
                 }
 
+
                 // check if user updating student
                 if (shouldUpdate && student != null) {
                     // update student by it's id
-                    updateStudent(inputName.getText().toString(),Long.parseLong(inputRollnumber.getText().toString()), position);
+                    editStudent(inputName.getText().toString(),Long.parseLong(inputRollnumber.getText().toString()), position);
                 } else {
                     // create new student
                     createStudent(inputName.getText().toString(),Long.parseLong(inputRollnumber.getText().toString()));
@@ -271,7 +288,7 @@ public class ViewStudents extends AppCompatActivity {
                     startActivity(intent);
                 }
                 else {
-                    Log.d("tag", "gullible");
+
                     Toast.makeText(ViewStudents.this, "Please enter the name", Toast.LENGTH_LONG).show();
                 }
             }
@@ -282,12 +299,12 @@ public class ViewStudents extends AppCompatActivity {
      * Toggling list and empty notes view
      */
     private void toggleEmptyNotes() {
-        // you can check notesList.size() > 0
+        // you can check studentsList.size() > 0
 
-        if (db.getNotesCount() > 0) {
-            noNotesView.setVisibility(View.GONE);
+        if (db.getStudentsCount() > 0) {
+            noStudentsView.setVisibility(View.GONE);
         } else {
-            noNotesView.setVisibility(View.VISIBLE);
+            noStudentsView.setVisibility(View.VISIBLE);
         }
     }
 }

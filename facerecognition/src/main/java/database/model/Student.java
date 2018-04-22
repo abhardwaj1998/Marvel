@@ -23,9 +23,9 @@ public class Student {
     // Create table SQL query
     public static final String CREATE_TABLE =
             "CREATE TABLE " + TABLE_NAME + "("
-                    + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + COLUMN_ID + " INTEGER AUTOINCREMENT,"
                     + COLUMN_NAME + " TEXT,"
-                    + COLUMN_ROLLNUMBER + " DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                    + COLUMN_ROLLNUMBER + " DATETIME DEFAULT CURRENT_TIMESTAMP PRIMARY KEY,"
                     + COLUMN_STATE + " INTEGER"
                     + ")";
 

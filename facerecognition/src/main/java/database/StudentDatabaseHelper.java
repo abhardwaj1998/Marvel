@@ -20,6 +20,7 @@ import java.util.Random;
 import database.model.Student;
 
 import static android.os.SystemClock.elapsedRealtime;
+import static database.model.Student.COLUMN_ROLLNUMBER;
 import static database.model.Student.TABLE_NAME;
 
 // StudentDatabaseHelper helps to Create, Read, Update, and Delete entries from database
@@ -54,7 +55,7 @@ public class StudentDatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public long insertNote(String name, long rollnumber) {
+    public long insertStudent(String name, long rollnumber) {
         // get writable database as we want to write data
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -65,11 +66,21 @@ public class StudentDatabaseHelper extends SQLiteOpenHelper {
         values.put(Student.COLUMN_NAME, name);
         values.put(Student.COLUMN_ROLLNUMBER, rollnumber);
         values.put(Student.COLUMN_STATE, 0);
-        // insert row
-        long id = db.insert(TABLE_NAME, null, values);
 
-        // close db connection
-        db.close();
+        long id;
+        String query = "SELECT + " + COLUMN_ROLLNUMBER +" FROM "+ TABLE_NAME +" WHERE "+ COLUMN_ROLLNUMBER + " =?";
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(rollnumber)});
+        if (!(cursor.getCount() > 0))
+        {
+            // insert row
+            id = db.insert(TABLE_NAME, null, values);
+
+            // close db connection
+            db.close();
+        }
+        else
+            id = -1;
+
 
         // return newly inserted row id
         return id;
@@ -89,7 +100,7 @@ public class StudentDatabaseHelper extends SQLiteOpenHelper {
             cursor.moveToFirst();
 
             // prepare student object
-            Log.d("mycity","loda");
+
             Student student = new Student(
 
                     cursor.getInt(cursor.getColumnIndex(Student.COLUMN_ID)),
@@ -101,11 +112,11 @@ public class StudentDatabaseHelper extends SQLiteOpenHelper {
 
             return student;
         }
-        Log.d("XYZ","lol");
+
         return null;
     }
 
-    public List<Student> getAllNotes() {
+    public List<Student> getAllStudents() {
         List<Student> students = new ArrayList<>();
         String selectQuery = "SELECT  * FROM " + TABLE_NAME + " ORDER BY " +
                 Student.COLUMN_ROLLNUMBER + " DESC";
@@ -136,7 +147,73 @@ public class StudentDatabaseHelper extends SQLiteOpenHelper {
         return students;
     }
 
-    public int getNotesCount() {
+    public List<Student> getGoodStudents() {
+        List<Student> students = new ArrayList<>();
+        String selectQuery = "SELECT  * FROM " + TABLE_NAME + " ORDER BY " +
+                Student.COLUMN_ROLLNUMBER + " DESC";
+        // Select All Query
+        // String selectQuery = "SELECT  " + Student.COLUMN_ID + ", " + Student.COLUMN_NAME + ", " + Student.COLUMN_ROLLNUMBER + ", " + Student.COLUMN_STATE + " FROM " + Student.TABLE_NAME + ";" ;
+//        + " ORDER BY " +
+//                Student.COLUMN_ROLLNUMBER + " DESC" + Student.COLUMN_STATE + " state";
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                if(cursor.getColumnIndex(Student.COLUMN_STATE) > 4) {
+                    Student student = new Student();
+                    student.setId(cursor.getInt(cursor.getColumnIndex(Student.COLUMN_ID)));
+                    student.setName(cursor.getString(cursor.getColumnIndex(Student.COLUMN_NAME)));
+                    student.setRollnumber(cursor.getLong(cursor.getColumnIndex(Student.COLUMN_ROLLNUMBER)));
+                    student.setState(cursor.getInt(cursor.getColumnIndex(Student.COLUMN_STATE)));
+                    students.add(student);
+                }
+            } while (cursor.moveToNext());
+        }
+
+        // close db connection
+        db.close();
+
+        // return students list
+        return students;
+    }
+
+    public List<Student> getBadStudents() {
+        List<Student> students = new ArrayList<>();
+        String selectQuery = "SELECT  * FROM " + TABLE_NAME + " ORDER BY " +
+                Student.COLUMN_ROLLNUMBER + " DESC";
+        // Select All Query
+        // String selectQuery = "SELECT  " + Student.COLUMN_ID + ", " + Student.COLUMN_NAME + ", " + Student.COLUMN_ROLLNUMBER + ", " + Student.COLUMN_STATE + " FROM " + Student.TABLE_NAME + ";" ;
+//        + " ORDER BY " +
+//                Student.COLUMN_ROLLNUMBER + " DESC" + Student.COLUMN_STATE + " state";
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                if(cursor.getColumnIndex(Student.COLUMN_STATE) <= 4) {
+                    Student student = new Student();
+                    student.setId(cursor.getInt(cursor.getColumnIndex(Student.COLUMN_ID)));
+                    student.setName(cursor.getString(cursor.getColumnIndex(Student.COLUMN_NAME)));
+                    student.setRollnumber(cursor.getLong(cursor.getColumnIndex(Student.COLUMN_ROLLNUMBER)));
+                    student.setState(cursor.getInt(cursor.getColumnIndex(Student.COLUMN_STATE)));
+                    students.add(student);
+                }
+            } while (cursor.moveToNext());
+        }
+
+        // close db connection
+        db.close();
+
+        // return students list
+        return students;
+    }
+
+    public int getStudentsCount() {
         String countQuery = "SELECT  * FROM " + TABLE_NAME;
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(countQuery, null);
@@ -150,16 +227,21 @@ public class StudentDatabaseHelper extends SQLiteOpenHelper {
     }
 
     // updating student
-    public int updateName(Student student) {
+    public int editStudent(Student student) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(Student.COLUMN_NAME, student.getName());
         values.put(Student.COLUMN_ROLLNUMBER, student.getRollnumber());
 
-        // updating row
-        return db.update(TABLE_NAME, values, Student.COLUMN_ID + " = ?",
-                new String[]{String.valueOf(student.getId())});
+        if(student.getName().toString()=="" || String.valueOf(student.getRollnumber())==""){
+            return 0;
+        }
+            // updating row
+            return db.update(TABLE_NAME, values, Student.COLUMN_ID + " = ?",
+                    new String[]{String.valueOf(student.getId())});
+
+
     }
 
     //  deleting student
@@ -173,13 +255,12 @@ public class StudentDatabaseHelper extends SQLiteOpenHelper {
     public void randomize(){
 
         SQLiteDatabase db = this.getWritableDatabase();
-        for(int i = 1; i<=getNotesCount(); i++){
+        for(int i = 1; i<= getStudentsCount(); i++){
             ContentValues cv = new ContentValues();
             Random rand = new Random(elapsedRealtime());
             int k = rand.nextInt(10);
             cv.put(Student.COLUMN_STATE,k);
             db.update(TABLE_NAME, cv, Student.COLUMN_ID + "= ?", new String[] {String.valueOf(i)});
-            Log.d("Hellcat",String.valueOf(k));
         }
         db.close();
     }
